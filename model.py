@@ -1,54 +1,66 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D , MaxPool2D , Flatten , Dropout , BatchNormalization
-from keras.preprocessing.image import ImageDataGenerator
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report,confusion_matrix
-from keras.callbacks import ReduceLROnPlateau
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# import keras
+# from keras.models import Sequential
+# from keras.layers import Dense, Conv2D , MaxPool2D , Flatten , Dropout , BatchNormalization
+# from keras.preprocessing.image import ImageDataGenerator
+# from sklearn.model_selection import train_test_split
+# from sklearn.metrics import classification_report,confusion_matrix
+# from keras.callbacks import ReduceLROnPlateau
 import pandas as pd
 import cv2
-import mediapipe as mp
+# import mediapipe as mp
 
 
-df = pd.DataFrame()
-print(df)
-list = [['Samreena', 'Computer Science', 100],
-    ['Asif', 'Maths', 90],
-    ['Mirha', 'Chemistry', 60]
-]
+# df = pd.DataFrame()
+# print(df)
+# list = [['S', 'Computer Science', 100],
+#     ['A', 'Maths', 90],
+#     ['M', 'Chemistry', 60]
+# ]
 
-df = df.append(list)
-df.columns = ['Student Name', 'Subjects', 'Marks']
-print(df)
-#coonvert pixels to data
-# def images_to_data(imagefile):
-#         roundnum = 1
-#         IMAGE_FILES = imagefile
-#         for idx, file in enumerate(IMAGE_FILES):
-#                 roundnum += 1
-#                 image = cv2.flip(cv2.imread(file), roundnum%2)
-#                 analysisframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#                 analysisframe = cv2.resize(analysisframe,(28,28))
+# df = df.append(list)
+# df.columns = ['Student Name', 'Subjects', 'Marks']
+# print(df)
 
-#                 nlist = []
-#                 rows,cols = analysisframe.shape
-#                 for i in range(rows):
-#                         for j in range(cols):
-#                                 k = analysisframe[i,j]
-#                                 nlist.append(k)
-                
-#                 datan = pd.DataFrame(nlist).T
-#                 colname = []
-#                 for val in range(784):
-#                         colname.append(val)
-#                 datan.columns = colname
+# coonvert pixels to data
+def images_to_data(imgfolders):
+        pixeldatalist = []
+        for folder in imgfolders:
+                IMAGE_FILES = folder
+                for idx, file in enumerate(IMAGE_FILES):
+                        nlist = []
+                        image = cv2.flip(cv2.imread(file), idx%2)
+                        analysisframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                        analysisframe = cv2.resize(analysisframe,(28,28))
 
-#                 pixeldata = datan.values
-#                 pixeldata = pixeldata / 255
-#                 pixeldata = pixeldata.reshape(-1,28,28,1)
-#                 prediction = model.predict(pixeldata)
+                        rows,cols = analysisframe.shape
+                        for i in range(rows):
+                                for j in range(cols):
+                                        k = analysisframe[i,j]
+                                        nlist.append(k)
+                        nlist.append(folder)
+                        pixeldatalist.append(nlist)
+                        nlist = []
+                        
+        datan = pd.DataFrame()
+        datan = datan.append(pixeldatalist)
+        colname = []
+        for val in range(784):
+                colname.append(val)
+        colname.append('label')
+        datan.columns = colname
+        datan.to_csv('bacteriaimagedata.csv', index = False)
+
+        return datan
+
+
+
+
+
+# pixeldata = datan.values
+# pixeldata = pixeldata / 255
+# pixeldata = pixeldata.reshape(-1,28,28,1)
 
 
 
