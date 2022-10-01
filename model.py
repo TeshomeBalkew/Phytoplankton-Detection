@@ -9,59 +9,48 @@
 # from keras.callbacks import ReduceLROnPlateau
 import pandas as pd
 import cv2
-# import mediapipe as mp
 
+import os
+import os.path
+pixeldatalist = []
+dirs = ['Chaetoceros', 'Skeletonema', 'Thalassionema', 'Guinardia_delicatula', 'Leptocylindrus', 'Mesodinium_sp', 'mix']
 
-# df = pd.DataFrame()
-# print(df)
-# list = [['S', 'Computer Science', 100],
-#     ['A', 'Maths', 90],
-#     ['M', 'Chemistry', 60]
-# ]
+numfiles = 0
+dir_size = 0
+for folder in dirs:
+    direct = "C:\\Users\\milug\\Mihir's Important Stuff\\Mihir's Visual Studio\\NHSEE\\Phytoplankton Detection (10)\\2006\\2006\\" + folder
+    direct = str(direct)
+    for (path, dirs, file1) in os.walk(direct):
+        for file in file1:
+                filename = os.path.join(path, file)
+                print(filename)
+                nlist = []
+                image = cv2.imread(filename)
+                gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+                analysisframe = cv2.resize(gray,(28,28))
 
-# df = df.append(list)
-# df.columns = ['Student Name', 'Subjects', 'Marks']
-# print(df)
+                rows,cols = analysisframe.shape
+                for i in range(rows):
+                        for j in range(cols):
+                                k = analysisframe[i,j]
+                                nlist.append(k)
+                nlist.append(folder)
+                pixeldatalist.append(nlist)
+                nlist = []
 
-# coonvert pixels to data
-def images_to_data(imgfolders):
-        pixeldatalist = []
-        for folder in imgfolders:
-                IMAGE_FILES = folder
-                for idx, file in enumerate(IMAGE_FILES):
-                        nlist = []
-                        image = cv2.flip(cv2.imread(file), idx%2)
-                        analysisframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                        analysisframe = cv2.resize(analysisframe,(28,28))
+datan = pd.DataFrame(pixeldatalist)
+colname = []
+for val in range(784):
+        colname.append(val)
+colname.append('label')
+datan.columns = colname
 
-                        rows,cols = analysisframe.shape
-                        for i in range(rows):
-                                for j in range(cols):
-                                        k = analysisframe[i,j]
-                                        nlist.append(k)
-                        nlist.append(folder)
-                        pixeldatalist.append(nlist)
-                        nlist = []
-                        
-        datan = pd.DataFrame()
-        datan = datan.append(pixeldatalist)
-        colname = []
-        for val in range(784):
-                colname.append(val)
-        colname.append('label')
-        datan.columns = colname
-        datan.to_csv('bacteriaimagedata.csv', index = False)
-
-        return datan
-
-
-
+datan.to_csv('bacteria_img_data.csv', index = False)
 
 
 # pixeldata = datan.values
 # pixeldata = pixeldata / 255
 # pixeldata = pixeldata.reshape(-1,28,28,1)
-
 
 
 
