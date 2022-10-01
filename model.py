@@ -9,7 +9,6 @@
 # from keras.callbacks import ReduceLROnPlateau
 import pandas as pd
 import cv2
-
 import os
 import os.path
 pixeldatalist = []
@@ -23,7 +22,6 @@ for folder in dirs:
     for (path, dirs, file1) in os.walk(direct):
         for file in file1:
                 filename = os.path.join(path, file)
-                print(filename)
                 nlist = []
                 image = cv2.imread(filename)
                 gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
