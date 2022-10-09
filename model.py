@@ -9,6 +9,8 @@ import math
 from keras.utils.np_utils import to_categorical # convert to one-hot-encoding
 from sklearn.metrics import confusion_matrix
 import itertools
+from sklearn.utils import class_weight
+
 
 from keras.utils.np_utils import to_categorical # convert to one-hot-encoding
 from keras.models import Sequential
@@ -23,8 +25,20 @@ le = preprocessing.LabelEncoder()
 y_train = np.load("actualvalues.npy")
 X_train = np.load("rawpixeldata.npy")
 
+# for x in np.unique(y_train):
+#     print(x)
+
 X_train = X_train[: len(X_train) - 75000]
 y_train = y_train[: len(y_train) - 75000]
+
+
+
+cls_wgts = class_weight.compute_class_weight('balanced',
+                                             sorted(np.unique(y_train)),
+                                             y_train)
+# dict mapping
+cls_wgts = {i : cls_wgts[i] for i, label in enumerate(sorted(np.unique(y_train)))}
+
 
 X_train, y_train = shuffle(X_train, y_train)
 
@@ -79,7 +93,7 @@ model.add(Dense(7, activation = "softmax"))
 optimizer = Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
 model.compile(optimizer = optimizer , loss = "categorical_crossentropy", metrics=["accuracy"])
 
-epochs = 20  # for better result increase the epochs
+epochs = 45  # for better result increase the epochs
 batch_size = 250
 
 datagen = ImageDataGenerator(
@@ -100,7 +114,7 @@ datagen.fit(X_train)
 
 # Fit the model
 history = model.fit(datagen.flow(train_X,train_y, batch_size=batch_size),
-                              epochs = epochs, validation_data = (test_X,test_y), steps_per_epoch=train_X.shape[0] // batch_size)
+                              epochs = epochs, validation_data = (test_X,test_y), steps_per_epoch=train_X.shape[0] // batch_size, class_weight=cls_wgts)
 
 model.save('bacteriaclassifier.h5')
 
@@ -111,3 +125,25 @@ plt.xlabel("Number of Epochs")
 plt.ylabel("Loss")
 plt.legend()
 plt.show()
+plt.savefig('lossmodelbc.png')
+
+plt.clf()
+
+# confusion matrix
+import seaborn as sns
+# Predict the values from the validation dataset
+Y_pred = model.predict(test_X)
+# Convert predictions classes to one hot vectors 
+Y_pred_classes = np.argmax(Y_pred,axis = 1) 
+# Convert validation observations to one hot vectors
+Y_true = np.argmax(test_y,axis = 1) 
+# compute the confusion matrix
+confusion_mtx = confusion_matrix(Y_true, Y_pred_classes) 
+# plot the confusion matrix
+f,ax = plt.subplots(figsize=(8, 8))
+sns.heatmap(confusion_mtx, annot=True, linewidths=0.01,cmap="Greens",linecolor="gray", fmt= '.1f',ax=ax)
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.title("Confusion Matrix")
+plt.show()
+plt.savefig('cmatrixbc.png')
