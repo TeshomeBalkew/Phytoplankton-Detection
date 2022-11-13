@@ -10,7 +10,7 @@ from keras.utils.np_utils import to_categorical # convert to one-hot-encoding
 from sklearn.metrics import confusion_matrix
 import itertools
 from sklearn.utils import class_weight
-
+import time
 
 from keras.utils.np_utils import to_categorical # convert to one-hot-encoding
 from keras.models import Sequential
@@ -19,18 +19,15 @@ from keras.optimizers import RMSprop,Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ReduceLROnPlateau
 
+start = time.time()
 
 le = preprocessing.LabelEncoder()
 
-y_train = np.load("actualvalues.npy")
-X_train = np.load("rawpixeldata.npy")
+y_train = np.load("actval2014.npy")
+X_train = np.load("rpd2014.npy")
 
-# for x in np.unique(y_train):
-#     print(x)
-
-X_train = X_train[: len(X_train) - 75000]
-y_train = y_train[: len(y_train) - 75000]
-
+X_train = X_train[: len(X_train)]
+y_train = y_train[: len(y_train)]
 
 
 cls_wgts = class_weight.compute_class_weight('balanced',
@@ -50,7 +47,7 @@ X_train = X_train.reshape(-1,28,28,1)
 le.fit(y_train)
 y_train = le.transform(y_train)
 
-y_train = to_categorical(y_train, num_classes = 7)
+y_train = to_categorical(y_train, num_classes = 93)
 
 dlen = len(X_train)
 trainlen = math.ceil((dlen*90)/100)
@@ -87,14 +84,14 @@ model.add(Dropout(0.25))
 model.add(Flatten())
 model.add(Dense(256, activation = "relu"))
 model.add(Dropout(0.5))
-model.add(Dense(7, activation = "softmax"))
+model.add(Dense(93, activation = "softmax"))
 
 # Compile the model
 optimizer = Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
 model.compile(optimizer = optimizer , loss = "categorical_crossentropy", metrics=["accuracy"])
 
-epochs = 45  # for better result increase the epochs
-batch_size = 250
+epochs = 100  # for better result increase the epochs
+batch_size = 128
 
 datagen = ImageDataGenerator(
         featurewise_center=False,  # set input mean to 0 over the dataset
@@ -116,7 +113,7 @@ datagen.fit(X_train)
 history = model.fit(datagen.flow(train_X,train_y, batch_size=batch_size),
                               epochs = epochs, validation_data = (test_X,test_y), steps_per_epoch=train_X.shape[0] // batch_size, class_weight=cls_wgts)
 
-model.save('bacteriaclassifier.h5')
+model.save('bcnn2014.h5')
 
 # Plot the loss and accuracy curves for training and validation 
 plt.plot(history.history['val_loss'], color='b', label="validation loss")
@@ -127,23 +124,6 @@ plt.legend()
 plt.show()
 plt.savefig('lossmodelbc.png')
 
-plt.clf()
+end = time.time()
 
-# confusion matrix
-import seaborn as sns
-# Predict the values from the validation dataset
-Y_pred = model.predict(test_X)
-# Convert predictions classes to one hot vectors 
-Y_pred_classes = np.argmax(Y_pred,axis = 1) 
-# Convert validation observations to one hot vectors
-Y_true = np.argmax(test_y,axis = 1) 
-# compute the confusion matrix
-confusion_mtx = confusion_matrix(Y_true, Y_pred_classes) 
-# plot the confusion matrix
-f,ax = plt.subplots(figsize=(8, 8))
-sns.heatmap(confusion_mtx, annot=True, linewidths=0.01,cmap="Greens",linecolor="gray", fmt= '.1f',ax=ax)
-plt.xlabel("Predicted Label")
-plt.ylabel("True Label")
-plt.title("Confusion Matrix")
-plt.show()
-plt.savefig('cmatrixbc.png')
+print('Time Taken: ', end-start)
