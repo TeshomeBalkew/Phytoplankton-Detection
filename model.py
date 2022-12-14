@@ -26,10 +26,6 @@ le = preprocessing.LabelEncoder()
 y_train = np.load("actval2014.npy")
 X_train = np.load("rpd2014.npy")
 
-X_train = X_train[: len(X_train)]
-y_train = y_train[: len(y_train)]
-
-
 cls_wgts = class_weight.compute_class_weight('balanced',
                                              sorted(np.unique(y_train)),
                                              y_train)
@@ -121,8 +117,8 @@ plt.title("Test Loss")
 plt.xlabel("Number of Epochs")
 plt.ylabel("Loss")
 plt.legend()
-plt.show()
 plt.savefig('lossmodelbc.png')
+plt.show()
 
 end = time.time()
 
